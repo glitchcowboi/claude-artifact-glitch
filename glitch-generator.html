@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glitch Art Generator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: 
+                radial-gradient(circle at 50% 50%, #001122 0%, #000608 50%, #000000 100%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.03) 2px, rgba(0, 255, 65, 0.03) 4px);
+            color: #00ff65;
+            font-family: 'Orbitron', 'Courier New', monospace;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 65, 0.02) 2px,
+                    rgba(0, 255, 65, 0.02) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff65;
+            text-shadow: 
+                0 0 5px #00ff65,
+                0 0 10px #00ff65,
+                0 0 15px #00ff65;
+            margin-bottom: 30px;
+            font-weight: 900;
+            font-size: 2.5em;
+            letter-spacing: 3px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid #00ff65;
+            border-radius: 0;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 101, 0.1),
+                0 0 20px rgba(0, 255, 101, 0.2);
+        }
+        
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff65;
+            padding: 10px;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 101, 0.1),
+                0 0 15px rgba(0, 255, 101, 0.2);
+        }
+        
+        .video-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff65, transparent);
+            animation: scanline 2s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(300px); opacity: 0; }
+        }
+        
+        video, canvas {
+            width: 100%;
+            height: auto;
+            border: 1px solid #003320;
+            display: block;
+            filter: 
+                contrast(1.2) 
+                brightness(1.1) 
+                hue-rotate(5deg);
+        }
+        
+        video {
+            transform: scaleX(-1);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            background: 
+                linear-gradient(135deg, rgba(0, 20, 10, 0.95), rgba(0, 40, 20, 0.95)),
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(0, 255, 65, 0.02),
+                    rgba(0, 255, 65, 0.02) 2px,
+                    transparent 2px,
+                    transparent 10px
+                );
+            padding: 25px;
+            border: 2px solid #00ff65;
+            box-shadow: 
+                inset 0 0 30px rgba(0, 255, 101, 0.1),
+                0 0 25px rgba(0, 255, 101, 0.15);
+        }
+        
+        .control-group {
+            background: 
+                linear-gradient(145deg, rgba(0, 10, 5, 0.9), rgba(0, 25, 15, 0.9));
+            padding: 20px;
+            border: 1px solid #00cc52;
+            position: relative;
+            box-shadow: 
+                inset 0 0 15px rgba(0, 255, 101, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .control-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00ff65, transparent);
+        }
+        
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #00ff65;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px #00ff65;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border: 1px solid #00cc52;
+        }
+        
+        .slider-container {
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #00dd55;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            background: linear-gradient(to right, #001a0a, #003315);
+            outline: none;
+            height: 8px;
+            border: 1px solid #00aa44;
+            appearance: none;
+            cursor: pointer;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: 
+                radial-gradient(circle, #00ff65 30%, #00cc52 70%);
+            border: 2px solid #00aa44;
+            cursor: pointer;
+            box-shadow: 
+                0 0 8px #00ff65,
+                inset 0 0 3px rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 0 12px #00ff65,
+                inset 0 0 5px rgba(255, 255, 255, 0.4);
+        }
+        
+        .value-display {
+            color: #00ff65;
+            font-size: 10px;
+            text-align: right;
+            font-weight: 700;
+            text-shadow: 0 0 5px #00ff65;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border: 1px solid #00aa44;
+            display: inline-block;
+            min-width: 30px;
+        }
+        
+        select {
+            width: 100%;
+            background: linear-gradient(145deg, #001a0a, #003315);
+            color: #00ff65;
+            border: 1px solid #00aa44;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+        
+        select option {
+            background: #001a0a;
+            color: #00ff65;
+        }
+        
+        button {
+            background: 
+                linear-gradient(145deg, #004d26, #00331a);
+            color: #00ff65;
+            border: 2px solid #00aa44;
+            padding: 12px 18px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 255, 101, 0.1);
+            text-shadow: 0 0 5px #00ff65;
+        }
+        
+        button:hover {
+            background: 
+                linear-gradient(145deg, #00664d, #004433);
+            box-shadow: 
+                0 0 15px #00ff65,
+                0 6px 12px rgba(0, 0, 0, 0.6),
+                inset 0 0 15px rgba(0, 255, 101, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 
+                0 0 10px #00ff65,
+                0 2px 6px rgba(0, 0, 0, 0.6),
+                inset 0 0 10px rgba(0, 255, 101, 0.15);
+        }
+        
+        .start-button {
+            display: block;
+            margin: 20px auto;
+            font-size: 16px;
+            padding: 20px 40px;
+            background: 
+                linear-gradient(145deg, #004d26, #00331a);
+            text-shadow: 0 0 10px #00ff65;
+            box-shadow: 
+                0 0 20px #00ff65,
+                0 8px 16px rgba(0, 0, 0, 0.6),
+                inset 0 0 20px rgba(0, 255, 101, 0.1);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.98; }
+        }
+        
+        .controls {
+            animation: flicker 0.15s infinite linear;
+        }
+        
+        /* Help button styles */
+        .help-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: 
+                linear-gradient(145deg, #004d26, #00331a);
+            color: #00ff65;
+            border: 2px solid #00aa44;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 900;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 255, 101, 0.1),
+                0 0 20px rgba(0, 255, 101, 0.2);
+            text-shadow: 0 0 5px #00ff65;
+            z-index: 1000;
+        }
+        
+        .help-button:hover {
+            background: 
+                linear-gradient(145deg, #00664d, #004433);
+            box-shadow: 
+                0 0 25px #00ff65,
+                0 6px 12px rgba(0, 0, 0, 0.6),
+                inset 0 0 15px rgba(0, 255, 101, 0.2);
+            transform: scale(1.1);
+        }
+        
+        /* Help modal styles */
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .help-modal.show {
+            display: block;
+        }
+        
+        .help-content {
+            max-width: 800px;
+            margin: 50px auto;
+            background: 
+                linear-gradient(135deg, rgba(0, 20, 10, 0.95), rgba(0, 40, 20, 0.95)),
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(0, 255, 65, 0.02),
+                    rgba(0, 255, 65, 0.02) 2px,
+                    transparent 2px,
+                    transparent 10px
+                );
+            border: 2px solid #00ff65;
+            padding: 30px;
+            box-shadow: 
+                inset 0 0 30px rgba(0, 255, 101, 0.1),
+                0 0 40px rgba(0, 255, 101, 0.3);
+            position: relative;
+        }
+        
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #00ff65;
+        }
+        
+        .help-header h2 {
+            margin: 0;
+            color: #00ff65;
+            font-size: 2em;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 
+                0 0 10px #00ff65,
+                0 0 20px #00ff65;
+        }
+        
+        .close-button {
+            background: 
+                linear-gradient(145deg, #004d26, #00331a);
+            color: #00ff65;
+            border: 2px solid #00aa44;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 255, 101, 0.1);
+        }
+        
+        .close-button:hover {
+            background: 
+                linear-gradient(145deg, #00664d, #004433);
+            transform: rotate(90deg) scale(1.1);
+        }
+        
+        .effect-help {
+            background: 
+                linear-gradient(145deg, rgba(0, 10, 5, 0.9), rgba(0, 25, 15, 0.9));
+            border: 1px solid #00cc52;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 
+                inset 0 0 15px rgba(0, 255, 101, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .effect-help h3 {
+            margin: 0 0 10px 0;
+            color: #00ff65;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px #00ff65;
+            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border: 1px solid #00cc52;
+            text-align: center;
+        }
+        
+        .effect-description {
+            color: #00dd55;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .try-settings {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00aa44;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .try-settings h4 {
+            margin: 0 0 8px 0;
+            color: #00ff65;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .setting-item {
+            color: #00dd55;
+            font-size: 11px;
+            margin: 4px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+        
+        .setting-item::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00ff65;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>◉ V1D30.GLT7CH.SYST3M 1.0 ◉</h1>
+        
+        <button id="startBtn" class="start-button">INIT.VIDEO.STREAM</button>
+        
+        <div id="mainContent" class="hidden">
+            <div class="video-container">
+                <div class="video-wrapper">
+                    <video id="video" autoplay muted></video>
+                </div>
+                <div class="video-wrapper">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>FEEDBACK</h3>
+                    <div class="slider-container">
+                        <label>Feedback Intensity</label>
+                        <input type="range" id="feedbackIntensity" min="0" max="100" value="25">
+                        <div class="value-display" id="feedbackValue">25</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Feedback Delay</label>
+                        <input type="range" id="feedbackDelay" min="1" max="20" value="5">
+                        <div class="value-display" id="delayValue">5</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>COLOR GLITCH</h3>
+                    <div class="slider-container">
+                        <label>RGB Shift</label>
+                        <input type="range" id="rgbShift" min="0" max="50" value="5">
+                        <div class="value-display" id="rgbValue">5</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Color Noise</label>
+                        <input type="range" id="colorNoise" min="0" max="100" value="20">
+                        <div class="value-display" id="noiseValue">20</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Bleach</label>
+                        <input type="range" id="bleach" min="0" max="100" value="25">
+                        <div class="value-display" id="bleachValue">25</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>DISTORTION</h3>
+                    <div class="slider-container">
+                        <label>Pixel Sort</label>
+                        <input type="range" id="pixelSort" min="0" max="100" value="0">
+                        <div class="value-display" id="sortValue">0</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Scan Lines</label>
+                        <input type="range" id="scanLines" min="0" max="100" value="30">
+                        <div class="value-display" id="scanValue">30</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>CHAOS</h3>
+                    <div class="slider-container">
+                        <label>Data Moshing</label>
+                        <input type="range" id="dataMosh" min="0" max="100" value="0">
+                        <div class="value-display" id="moshValue">0</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>CHROMAKEY</h3>
+                    <div class="slider-container">
+                        <label>Chroma Intensity</label>
+                        <input type="range" id="chromaIntensity" min="0" max="100" value="0">
+                        <div class="value-display" id="chromaValue">0</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Color Tolerance</label>
+                        <input type="range" id="chromaTolerance" min="1" max="100" value="30">
+                        <div class="value-display" id="toleranceValue">30</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Chroma Color</label>
+                        <select id="chromaColor">
+                            <option value="green">Green</option>
+                            <option value="blue">Blue</option>
+                            <option value="red">Red</option>
+                            <option value="magenta">Magenta</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="yellow">Yellow</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>VHS.ANALOG</h3>
+                    <div class="slider-container">
+                        <label>Tracking Errors</label>
+                        <input type="range" id="vhsTracking" min="0" max="100" value="0">
+                        <div class="value-display" id="vhsValue">0</div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Wave Distortion</label>
+                        <input type="range" id="vhsWave" min="0" max="100" value="0">
+                        <div class="value-display" id="waveValue">0</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>TIME.FX</h3>
+                    <div class="slider-container">
+                        <label>Time Echo</label>
+                        <input type="range" id="timeEcho" min="0" max="100" value="0">
+                        <div class="value-display" id="echoValue">0</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>AUDIO.SYNC</h3>
+                    <div class="slider-container">
+                        <label>Audio Sensitivity</label>
+                        <input type="range" id="audioSensitivity" min="0" max="100" value="0">
+                        <div class="value-display" id="audioValue">0</div>
+                    </div>
+                    <button onclick="toggleAudio()" id="audioBtn">ENABLE MIC</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>EFFECTS</h3>
+                    <button onclick="randomizeAll()">RANDOMIZE ALL</button>
+                    <button onclick="resetAll()">RESET</button>
+                    <button onclick="saveFrame()">CAPTURE FRAME</button>
+                    <button onclick="toggleVideoRecording()" id="videoBtn">START VIDEO REC</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Button -->
+        <button class="help-button" onclick="toggleHelp()">?</button>
+        
+        <!-- Help Modal -->
+        <div class="help-modal" id="helpModal">
+            <div class="help-content">
+                <div class="help-header">
+                    <h2>GLITCH.FX.GUIDE</h2>
+                    <button class="close-button" onclick="toggleHelp()">×</button>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>FEEDBACK</h3>
+                    <div class="effect-description">
+                        Creates ghosting and trail effects by blending previous frames with the current frame. Higher intensity creates stronger trails, while delay controls how far back in time the effect reaches.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Feedback Intensity: 60-80 (psychedelic trails)</div>
+                        <div class="setting-item">Feedback Delay: 8-12 (longer echo)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>COLOR GLITCH</h3>
+                    <div class="effect-description">
+                        RGB Shift separates color channels horizontally. Color Noise adds random pixel corruption. Bleach creates an overexposed, high-contrast effect by amplifying bright areas.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">RGB Shift: 15-25 (chromatic aberration)</div>
+                        <div class="setting-item">Color Noise: 30-50 (digital static)</div>
+                        <div class="setting-item">Bleach: 40-60 (blown-out highlights)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>DISTORTION</h3>
+                    <div class="effect-description">
+                        Pixel Sort rearranges pixels in each row by brightness, creating streaking effects. Scan Lines simulates CRT monitor interference with horizontal lines.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Pixel Sort: 50-70 (datamosh streaks)</div>
+                        <div class="setting-item">Scan Lines: 40-60 (retro TV look)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>CHAOS</h3>
+                    <div class="effect-description">
+                        Data Moshing corrupts the image by copying blocks of pixels to random locations, duplicating scan lines, and introducing various digital artifacts similar to corrupted video files.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Data Moshing: 60-90 (heavy corruption)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>CHROMAKEY</h3>
+                    <div class="effect-description">
+                        Replaces pixels of a specific color with animated patterns, noise, or inverted colors. Tolerance controls how closely pixels must match the target color.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Chroma Intensity: 70-90 (full replacement)</div>
+                        <div class="setting-item">Color Tolerance: 30-50 (moderate range)</div>
+                        <div class="setting-item">Chroma Color: Green (for green screen effect)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>VHS.ANALOG</h3>
+                    <div class="effect-description">
+                        Tracking Errors simulates VHS tape tracking issues with horizontal displacement. Wave Distortion creates diagonal interference bands that move across the screen.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Tracking Errors: 50-70 (unstable playback)</div>
+                        <div class="setting-item">Wave Distortion: 40-60 (magnetic interference)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>TIME.FX</h3>
+                    <div class="effect-description">
+                        Time Echo blends multiple frames from different points in time, creating a motion blur effect that emphasizes movement and creates dreamlike sequences.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Time Echo: 40-70 (temporal smearing)</div>
+                    </div>
+                </div>
+                
+                <div class="effect-help">
+                    <h3>AUDIO.SYNC</h3>
+                    <div class="effect-description">
+                        Makes effects react to microphone input. Bass frequencies trigger RGB shifts, mid frequencies add color noise, and high frequencies create scan lines. Requires microphone permission.
+                    </div>
+                    <div class="try-settings">
+                        <h4>Try These Settings:</h4>
+                        <div class="setting-item">Audio Sensitivity: 50-80 (reactive visuals)</div>
+                        <div class="setting-item">Enable Mic + play music nearby</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let video, canvas, ctx;
+        let animationId;
+        let feedbackBuffer = [];
+        let glitchBuffer;
+        let frameCount = 0;
+        let audioContext, analyser, dataArray, microphone;
+        let audioEnabled = false;
+        let timeEchoBuffer = [];
+        let isRecordingVideo = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingStartTime = 0;
+        const VIDEO_DURATION = 11000; // 11 seconds
+        
+        // Performance optimization: cache canvas dimensions
+        let canvasWidth = 0;
+        let canvasHeight = 0;
+        
+        // Performance optimization: reusable buffers
+        let tempDataBuffer = null;
+        let originalDataBuffer = null;
+        
+        // Performance optimization: limit buffer sizes
+        const MAX_FEEDBACK_BUFFER_SIZE = 20;
+        const MAX_ECHO_BUFFER_SIZE = 10;
+        
+        let params = {
+            feedbackIntensity: 25,
+            feedbackDelay: 5,
+            rgbShift: 5,
+            colorNoise: 20,
+            bleach: 25,
+            pixelSort: 0,
+            scanLines: 30,
+            dataMosh: 0,
+            chromaIntensity: 0,
+            chromaTolerance: 30,
+            chromaColor: 'green',
+            vhsTracking: 0,
+            vhsWave: 0,
+            audioSensitivity: 0,
+            timeEcho: 0
+        };
+        
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                ctx = canvas.getContext('2d', { alpha: false }); // Performance: disable alpha
+                
+                video.srcObject = stream;
+                
+                video.addEventListener('loadedmetadata', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    // Cache dimensions
+                    canvasWidth = canvas.width;
+                    canvasHeight = canvas.height;
+                    
+                    // Initialize reusable buffers
+                    const bufferSize = canvasWidth * canvasHeight * 4;
+                    tempDataBuffer = new Uint8ClampedArray(bufferSize);
+                    originalDataBuffer = new Uint8ClampedArray(bufferSize);
+                    
+                    glitchBuffer = ctx.createImageData(canvasWidth, canvasHeight);
+                    
+                    document.getElementById('startBtn').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    
+                    setupControls();
+                    startGlitching();
+                });
+            } catch (err) {
+                alert('Error accessing camera: ' + err.message);
+            }
+        });
+        
+        function setupControls() {
+            const controls = {
+                feedbackIntensity: 'feedbackValue',
+                feedbackDelay: 'delayValue',
+                rgbShift: 'rgbValue',
+                colorNoise: 'noiseValue',
+                bleach: 'bleachValue',
+                pixelSort: 'sortValue',
+                scanLines: 'scanValue',
+                dataMosh: 'moshValue',
+                chromaIntensity: 'chromaValue',
+                chromaTolerance: 'toleranceValue',
+                vhsTracking: 'vhsValue',
+                vhsWave: 'waveValue',
+                audioSensitivity: 'audioValue',
+                timeEcho: 'echoValue'
+            };
+            
+            Object.keys(controls).forEach(param => {
+                const slider = document.getElementById(param);
+                const display = document.getElementById(controls[param]);
+                
+                slider.addEventListener('input', (e) => {
+                    params[param] = parseInt(e.target.value);
+                    display.textContent = e.target.value;
+                });
+            });
+            
+            document.getElementById('chromaColor').addEventListener('change', (e) => {
+                params.chromaColor = e.target.value;
+            });
+        }
+        
+        function startGlitching() {
+            function render() {
+                if (video.readyState >= 2) {
+                    frameCount++;
+                    
+                    ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
+                    
+                    let imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+                    let data = imageData.data;
+                    
+                    // Apply effects only if intensity > 0
+                    if (params.feedbackIntensity > 0) applyFeedback(imageData);
+                    if (params.rgbShift > 0) applyRGBShift(data);
+                    if (params.colorNoise > 0) applyColorNoise(data);
+                    if (params.bleach > 0) applyBleach(imageData);
+                    if (params.pixelSort > 0) applyPixelSort(data);
+                    if (params.scanLines > 0) applyScanLines(data);
+                    if (params.dataMosh > 0) applyDataMoshing(data);
+                    if (params.chromaIntensity > 0) applyChromaKey(data);
+                    if (params.vhsTracking > 0) applyVHSTracking(data);
+                    if (params.vhsWave > 0) applyVHSWave(data);
+                    if (params.audioSensitivity > 0 && audioEnabled) applyAudioEffects(data);
+                    if (params.timeEcho > 0) applyTimeEcho(imageData);
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    // Handle video recording duration
+                    if (isRecordingVideo) {
+                        checkVideoRecordingDuration();
+                    }
+                }
+                
+                animationId = requestAnimationFrame(render);
+            }
+            
+            render();
+        }
+        
+        function applyFeedback(imageData) {
+            feedbackBuffer.push(new Uint8ClampedArray(imageData.data));
+            
+            const maxBufferSize = Math.min(Math.max(1, params.feedbackDelay), MAX_FEEDBACK_BUFFER_SIZE);
+            while (feedbackBuffer.length > maxBufferSize) {
+                feedbackBuffer.shift();
+            }
+            
+            if (feedbackBuffer.length >= maxBufferSize) {
+                const delayedFrame = feedbackBuffer[0];
+                const alpha = params.feedbackIntensity / 100;
+                const oneMinusAlpha = 1 - alpha;
+                
+                // Performance: unroll loop partially for better performance
+                const length = imageData.data.length;
+                for (let i = 0; i < length; i += 4) {
+                    imageData.data[i] = Math.min(255, imageData.data[i] * oneMinusAlpha + delayedFrame[i] * alpha);
+                    imageData.data[i + 1] = Math.min(255, imageData.data[i + 1] * oneMinusAlpha + delayedFrame[i + 1] * alpha);
+                    imageData.data[i + 2] = Math.min(255, imageData.data[i + 2] * oneMinusAlpha + delayedFrame[i + 2] * alpha);
+                }
+            }
+        }
+        
+        function applyBleach(imageData) {
+            const bleachBuffer = [];
+            bleachBuffer.push(new Uint8ClampedArray(imageData.data));
+            
+            if (bleachBuffer.length > 3) {
+                bleachBuffer.shift();
+            }
+            
+            if (bleachBuffer.length >= 1) {
+                const delayedFrame = bleachBuffer[0];
+                const alpha = params.bleach / 100;
+                const oneMinusAlpha = 1 - alpha;
+                const alphaTimes2 = alpha * 2.0;
+                
+                const length = imageData.data.length;
+                for (let i = 0; i < length; i += 4) {
+                    imageData.data[i] = Math.min(255, imageData.data[i] * oneMinusAlpha + delayedFrame[i] * alphaTimes2);
+                    imageData.data[i + 1] = Math.min(255, imageData.data[i + 1] * oneMinusAlpha + delayedFrame[i + 1] * alphaTimes2);
+                    imageData.data[i + 2] = Math.min(255, imageData.data[i + 2] * oneMinusAlpha + delayedFrame[i + 2] * alphaTimes2);
+                }
+            }
+        }
+        
+        function applyRGBShift(data) {
+            const shift = params.rgbShift;
+            
+            // Reuse buffer instead of creating new one
+            originalDataBuffer.set(data);
+            
+            for (let y = 0; y < canvasHeight; y++) {
+                const yOffset = y * canvasWidth;
+                for (let x = 0; x < canvasWidth; x++) {
+                    const i = (yOffset + x) * 4;
+                    
+                    const redX = Math.max(0, Math.min(canvasWidth - 1, x + shift));
+                    const redI = (yOffset + redX) * 4;
+                    data[i] = originalDataBuffer[redI];
+                    
+                    const blueX = Math.max(0, Math.min(canvasWidth - 1, x - shift));
+                    const blueI = (yOffset + blueX) * 4;
+                    data[i + 2] = originalDataBuffer[blueI + 2];
+                }
+            }
+        }
+        
+        function applyColorNoise(data) {
+            const intensity = params.colorNoise / 100;
+            const threshold = intensity * 0.3;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.random() < threshold) {
+                    data[i] = Math.random() * 255;
+                    data[i + 1] = Math.random() * 255;
+                    data[i + 2] = Math.random() * 255;
+                }
+            }
+        }
+        
+        function applyPixelSort(data) {
+            const intensity = params.pixelSort / 100;
+            
+            for (let y = 0; y < canvasHeight; y++) {
+                if (Math.random() < intensity) {
+                    const rowPixels = [];
+                    const yOffset = y * canvasWidth;
+                    
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const i = (yOffset + x) * 4;
+                        rowPixels.push([data[i], data[i + 1], data[i + 2], data[i + 3]]);
+                    }
+                    
+                    rowPixels.sort((a, b) => {
+                        const brightnessA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
+                        const brightnessB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
+                        return brightnessA - brightnessB;
+                    });
+                    
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const i = (yOffset + x) * 4;
+                        data[i] = rowPixels[x][0];
+                        data[i + 1] = rowPixels[x][1];
+                        data[i + 2] = rowPixels[x][2];
+                        data[i + 3] = rowPixels[x][3];
+                    }
+                }
+            }
+        }
+        
+        function applyScanLines(data) {
+            const intensity = params.scanLines / 100;
+            
+            for (let y = 0; y < canvasHeight; y += 2) {
+                if (Math.random() < intensity) {
+                    const yOffset = y * canvasWidth;
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const i = (yOffset + x) * 4;
+                        data[i] *= 0.5;
+                        data[i + 1] *= 0.5;
+                        data[i + 2] *= 0.5;
+                    }
+                }
+            }
+        }
+        
+        function applyDataMoshing(data) {
+            const intensity = params.dataMosh / 100;
+            const numCorruptions = Math.floor(intensity * 50);
+            
+            for (let c = 0; c < numCorruptions; c++) {
+                const corruptionType = Math.floor(Math.random() * 4);
+                
+                switch(corruptionType) {
+                    case 0:
+                        const blockSize = Math.floor(20 + intensity * 80);
+                        const sourceX = Math.floor(Math.random() * (canvasWidth - blockSize));
+                        const sourceY = Math.floor(Math.random() * (canvasHeight - blockSize));
+                        const targetX = Math.floor(Math.random() * (canvasWidth - blockSize));
+                        const targetY = Math.floor(Math.random() * (canvasHeight - blockSize));
+                        
+                        for (let y = 0; y < blockSize && sourceY + y < canvasHeight && targetY + y < canvasHeight; y++) {
+                            for (let x = 0; x < blockSize && sourceX + x < canvasWidth && targetX + x < canvasWidth; x++) {
+                                const sourceIdx = ((sourceY + y) * canvasWidth + (sourceX + x)) * 4;
+                                const targetIdx = ((targetY + y) * canvasWidth + (targetX + x)) * 4;
+                                
+                                data[targetIdx] = data[sourceIdx];
+                                data[targetIdx + 1] = data[sourceIdx + 1];
+                                data[targetIdx + 2] = data[sourceIdx + 2];
+                                data[targetIdx + 3] = data[sourceIdx + 3];
+                            }
+                        }
+                        break;
+                        
+                    case 1:
+                        const sourceLine = Math.floor(Math.random() * canvasHeight);
+                        const numDuplicates = Math.floor(5 + intensity * 20);
+                        
+                        for (let d = 0; d < numDuplicates; d++) {
+                            const targetLine = Math.floor(Math.random() * canvasHeight);
+                            if (targetLine < canvasHeight && sourceLine < canvasHeight) {
+                                const sourceOffset = sourceLine * canvasWidth * 4;
+                                const targetOffset = targetLine * canvasWidth * 4;
+                                const lineLength = canvasWidth * 4;
+                                
+                                for (let i = 0; i < lineLength; i++) {
+                                    data[targetOffset + i] = data[sourceOffset + i];
+                                }
+                            }
+                        }
+                        break;
+                        
+                    case 2:
+                        const swapSize = Math.floor(10 + intensity * 40);
+                        const swapX = Math.floor(Math.random() * (canvasWidth - swapSize));
+                        const swapY = Math.floor(Math.random() * (canvasHeight - swapSize));
+                        
+                        for (let y = 0; y < swapSize && swapY + y < canvasHeight; y++) {
+                            for (let x = 0; x < swapSize && swapX + x < canvasWidth; x++) {
+                                const idx = ((swapY + y) * canvasWidth + (swapX + x)) * 4;
+                                const r = data[idx];
+                                const g = data[idx + 1];
+                                const b = data[idx + 2];
+                                
+                                data[idx] = b;
+                                data[idx + 1] = r;
+                                data[idx + 2] = g;
+                            }
+                        }
+                        break;
+                        
+                    case 3:
+                        const corruptSize = Math.floor(intensity * 1000);
+                        for (let i = 0; i < corruptSize; i++) {
+                            const randomIdx = Math.floor(Math.random() * (data.length / 4)) * 4;
+                            data[randomIdx] = Math.floor(Math.random() * 256);
+                            data[randomIdx + 1] = Math.floor(Math.random() * 256);
+                            data[randomIdx + 2] = Math.floor(Math.random() * 256);
+                        }
+                        break;
+                }
+            }
+        }
+        
+        function applyChromaKey(data) {
+            const intensity = params.chromaIntensity / 100;
+            const tolerance = params.chromaTolerance / 100;
+            
+            const colors = {
+                green: [0, 255, 0],
+                blue: [0, 0, 255],
+                red: [255, 0, 0],
+                magenta: [255, 0, 255],
+                cyan: [0, 255, 255],
+                yellow: [255, 255, 0]
+            };
+            
+            const targetColor = colors[params.chromaColor];
+            const time = frameCount * 0.1;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                const distance = Math.sqrt(
+                    Math.pow(r - targetColor[0], 2) +
+                    Math.pow(g - targetColor[1], 2) +
+                    Math.pow(b - targetColor[2], 2)
+                ) / (255 * Math.sqrt(3));
+                
+                if (distance < tolerance && Math.random() < intensity) {
+                    const pixelIndex = Math.floor(i / 4);
+                    const x = pixelIndex % canvasWidth;
+                    const y = Math.floor(pixelIndex / canvasWidth);
+                    
+                    const wave1 = Math.sin(x * 0.1 + time) * 127 + 128;
+                    const wave2 = Math.cos(y * 0.08 + time * 1.2) * 127 + 128;
+                    const wave3 = Math.sin((x + y) * 0.05 + time * 0.8) * 127 + 128;
+                    
+                    const mode = Math.floor(Math.random() * 4);
+                    
+                    switch(mode) {
+                        case 0:
+                            data[i] = wave1;
+                            data[i + 1] = wave2;
+                            data[i + 2] = wave3;
+                            break;
+                        case 1:
+                            data[i] = Math.random() * 255;
+                            data[i + 1] = Math.random() * 255;
+                            data[i + 2] = Math.random() * 255;
+                            break;
+                        case 2:
+                            data[i] = 255 - r;
+                            data[i + 1] = 255 - g;
+                            data[i + 2] = 255 - b;
+                            break;
+                        case 3:
+                            const glow = Math.sin(time + x * y * 0.001) * 100 + 155;
+                            data[i] = glow;
+                            data[i + 1] = 0;
+                            data[i + 2] = glow;
+                            break;
+                    }
+                    
+                    if (Math.random() < 0.3) {
+                        data[i + 3] = Math.random() * 255;
+                    }
+                }
+            }
+        }
+        
+        function applyVHSTracking(data) {
+            const intensity = params.vhsTracking / 100;
+            const numGlitches = Math.floor(intensity * 20);
+            
+            for (let g = 0; g < numGlitches; g++) {
+                const startY = Math.floor(Math.random() * canvasHeight);
+                const blockHeight = Math.floor(Math.random() * 20) + 5;
+                const endY = Math.min(canvasHeight, startY + blockHeight);
+                
+                const shift = Math.floor((Math.random() - 0.5) * canvasWidth * intensity);
+                
+                for (let y = startY; y < endY; y++) {
+                    // Use temp buffer for line shifting
+                    const lineStart = y * canvasWidth * 4;
+                    const lineEnd = lineStart + canvasWidth * 4;
+                    
+                    // Copy line to temp buffer
+                    for (let i = lineStart; i < lineEnd; i++) {
+                        tempDataBuffer[i - lineStart] = data[i];
+                    }
+                    
+                    // Shift and write back
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const sourceX = x - shift;
+                        const targetIdx = (y * canvasWidth + x) * 4;
+                        
+                        if (sourceX >= 0 && sourceX < canvasWidth) {
+                            const sourceIdx = sourceX * 4;
+                            data[targetIdx] = tempDataBuffer[sourceIdx];
+                            data[targetIdx + 1] = tempDataBuffer[sourceIdx + 1];
+                            data[targetIdx + 2] = tempDataBuffer[sourceIdx + 2];
+                            data[targetIdx + 3] = tempDataBuffer[sourceIdx + 3];
+                        } else {
+                            data[targetIdx] = Math.random() * 255;
+                            data[targetIdx + 1] = Math.random() * 255;
+                            data[targetIdx + 2] = Math.random() * 255;
+                            data[targetIdx + 3] = 255;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function applyVHSWave(data) {
+            const intensity = params.vhsWave / 100;
+            const time = frameCount * 0.02;
+            
+            const waveAmplitude = intensity * 25;
+            const waveFrequency = 0.01 + intensity * 0.02;
+            
+            const numBands = 3;
+            const totalDiagonal = canvasWidth + canvasHeight;
+            
+            // Reuse buffer instead of creating new one
+            originalDataBuffer.set(data);
+            
+            for (let band = 0; band < numBands; band++) {
+                const bandSpeed = 0.8 + band * 0.4;
+                const bandOffset = (time * bandSpeed * 50 + band * totalDiagonal / numBands) % (totalDiagonal * 2);
+                const bandWidth = 60 + band * 20;
+                
+                for (let y = 0; y < canvasHeight; y++) {
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const diagonalPos = x + y;
+                        let diagonalDistance = Math.abs(diagonalPos - bandOffset);
+                        
+                        diagonalDistance = Math.min(diagonalDistance, Math.abs(diagonalPos - (bandOffset - totalDiagonal * 2)));
+                        diagonalDistance = Math.min(diagonalDistance, Math.abs(diagonalPos - (bandOffset + totalDiagonal * 2)));
+                        
+                        if (diagonalDistance < bandWidth) {
+                            const bandProgress = diagonalDistance / bandWidth;
+                            const bandIntensity = Math.sin(bandProgress * Math.PI) * 0.7;
+                            
+                            const wavePhase = y * waveFrequency + time * 3 + band;
+                            const horizontalShift = Math.sin(wavePhase) * waveAmplitude * bandIntensity;
+                            const verticalShift = Math.cos(wavePhase * 0.7 + band) * waveAmplitude * 0.2 * bandIntensity;
+                            
+                            const sourceX = Math.max(0, Math.min(canvasWidth - 1, Math.round(x - horizontalShift)));
+                            const sourceY = Math.max(0, Math.min(canvasHeight - 1, Math.round(y + verticalShift)));
+                            
+                            const targetIdx = (y * canvasWidth + x) * 4;
+                            const sourceIdx = (sourceY * canvasWidth + sourceX) * 4;
+                            
+                            const mixAmount = bandIntensity * intensity;
+                            
+                            if (mixAmount > 0.1) {
+                                data[targetIdx] = originalDataBuffer[sourceIdx];
+                                data[targetIdx + 1] = originalDataBuffer[sourceIdx + 1];
+                                data[targetIdx + 2] = originalDataBuffer[sourceIdx + 2];
+                                
+                                if (Math.random() < bandIntensity * intensity * 0.15) {
+                                    data[targetIdx] = Math.min(255, Math.max(0, data[targetIdx] + (Math.random() - 0.5) * 80));
+                                    data[targetIdx + 1] = Math.min(255, Math.max(0, data[targetIdx + 1] + (Math.random() - 0.5) * 80));
+                                    data[targetIdx + 2] = Math.min(255, Math.max(0, data[targetIdx + 2] + (Math.random() - 0.5) * 80));
+                                }
+                                
+                                if (Math.random() < bandIntensity * intensity * 0.1) {
+                                    const streakLength = Math.floor(waveAmplitude * 0.5) + 3;
+                                    const streakX = Math.max(0, x - streakLength);
+                                    const streakIdx = (y * canvasWidth + streakX) * 4;
+                                    
+                                    data[targetIdx] = originalDataBuffer[streakIdx];
+                                    data[targetIdx + 1] = originalDataBuffer[streakIdx + 1];
+                                    data[targetIdx + 2] = originalDataBuffer[streakIdx + 2];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function applyAudioEffects(data) {
+            if (!analyser || !dataArray) return;
+            
+            try {
+                analyser.getByteFrequencyData(dataArray);
+                
+                const sensitivity = params.audioSensitivity / 100;
+                
+                const bassRange = dataArray.slice(0, 8);
+                const midRange = dataArray.slice(6, 40);
+                const highRange = dataArray.slice(30, 100);
+                
+                const bassLevel = bassRange.reduce((a, b) => a + b) / bassRange.length / 255;
+                const midLevel = midRange.reduce((a, b) => a + b) / midRange.length / 255;
+                const highLevel = highRange.reduce((a, b) => a + b) / highRange.length / 255;
+                
+                const bassThreshold = 0.05 * sensitivity;
+                const midThreshold = 0.03 * sensitivity;
+                const highThreshold = 0.02 * sensitivity;
+                
+                if (bassLevel > bassThreshold) {
+                    applyAudioRGBShift(data, Math.floor(bassLevel * sensitivity * 25));
+                }
+                
+                if (midLevel > midThreshold) {
+                    applyAudioColorNoise(data, midLevel * sensitivity * 0.8);
+                }
+                
+                if (highLevel > highThreshold) {
+                    applyAudioScanLines(data, highLevel * sensitivity * 1.0);
+                }
+                
+                const overallVolume = dataArray.reduce((a, b) => a + b) / dataArray.length / 255;
+                if (overallVolume > 0.02 * sensitivity) {
+                    const audioFeedbackBoost = Math.min(50, overallVolume * sensitivity * 100);
+                    if (params.feedbackIntensity > 0) {
+                        const originalFeedback = params.feedbackIntensity;
+                        params.feedbackIntensity = Math.min(100, originalFeedback + audioFeedbackBoost);
+                        setTimeout(() => { params.feedbackIntensity = originalFeedback; }, 16);
+                    }
+                }
+                
+            } catch (error) {
+                console.log('Audio processing error:', error);
+            }
+        }
+        
+        function applyAudioRGBShift(data, shift) {
+            originalDataBuffer.set(data);
+            
+            for (let y = 0; y < canvasHeight; y++) {
+                const yOffset = y * canvasWidth;
+                for (let x = 0; x < canvasWidth; x++) {
+                    const i = (yOffset + x) * 4;
+                    
+                    const redX = Math.max(0, Math.min(canvasWidth - 1, x + shift));
+                    const redI = (yOffset + redX) * 4;
+                    data[i] = originalDataBuffer[redI];
+                    
+                    const blueX = Math.max(0, Math.min(canvasWidth - 1, x - shift));
+                    const blueI = (yOffset + blueX) * 4;
+                    data[i + 2] = originalDataBuffer[blueI + 2];
+                }
+            }
+        }
+        
+        function applyAudioColorNoise(data, intensity) {
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.random() < intensity) {
+                    data[i] = Math.random() * 255;
+                    data[i + 1] = Math.random() * 255;
+                    data[i + 2] = Math.random() * 255;
+                }
+            }
+        }
+        
+        function applyAudioScanLines(data, intensity) {
+            const boost = intensity * 150;
+            
+            for (let y = 0; y < canvasHeight; y += 2) {
+                if (Math.random() < intensity) {
+                    const yOffset = y * canvasWidth;
+                    for (let x = 0; x < canvasWidth; x++) {
+                        const i = (yOffset + x) * 4;
+                        data[i] = Math.min(255, data[i] + boost);
+                        data[i + 1] = Math.min(255, data[i + 1] + boost);
+                        data[i + 2] = Math.min(255, data[i + 2] + boost);
+                    }
+                }
+            }
+        }
+        
+        function applyTimeEcho(imageData) {
+            const intensity = params.timeEcho / 100;
+            
+            timeEchoBuffer.push(new Uint8ClampedArray(imageData.data));
+            
+            const maxEchoFrames = Math.min(Math.floor(intensity * 10) + 1, MAX_ECHO_BUFFER_SIZE);
+            while (timeEchoBuffer.length > maxEchoFrames) {
+                timeEchoBuffer.shift();
+            }
+            
+            if (timeEchoBuffer.length > 1) {
+                const echoAlpha = intensity * 0.6;
+                const oneMinusAlpha = 1 - echoAlpha;
+                
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    let totalR = 0, totalG = 0, totalB = 0;
+                    let weight = 0;
+                    
+                    for (let j = 0; j < timeEchoBuffer.length; j++) {
+                        const frameWeight = (j + 1) / timeEchoBuffer.length;
+                        const echoFrame = timeEchoBuffer[j];
+                        
+                        totalR += echoFrame[i] * frameWeight;
+                        totalG += echoFrame[i + 1] * frameWeight;
+                        totalB += echoFrame[i + 2] * frameWeight;
+                        weight += frameWeight;
+                    }
+                    
+                    imageData.data[i] = imageData.data[i] * oneMinusAlpha + (totalR / weight) * echoAlpha;
+                    imageData.data[i + 1] = imageData.data[i + 1] * oneMinusAlpha + (totalG / weight) * echoAlpha;
+                    imageData.data[i + 2] = imageData.data[i + 2] * oneMinusAlpha + (totalB / weight) * echoAlpha;
+                }
+            }
+        }
+        
+        async function toggleAudio() {
+            const btn = document.getElementById('audioBtn');
+            
+            if (!audioEnabled) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    const microphone = audioContext.createMediaStreamSource(stream);
+                    
+                    analyser.fftSize = 512;
+                    analyser.smoothingTimeConstant = 0.3;
+                    analyser.minDecibels = -80;
+                    analyser.maxDecibels = -10;
+                    
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    
+                    microphone.connect(analyser);
+                    
+                    audioEnabled = true;
+                    btn.textContent = 'DISABLE MIC';
+                    btn.style.background = 'linear-gradient(145deg, #664d00, #443300)';
+                    
+                } catch (err) {
+                    alert('Microphone access denied: ' + err.message);
+                }
+            } else {
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                    analyser = null;
+                    dataArray = null;
+                }
+                audioEnabled = false;
+                btn.textContent = 'ENABLE MIC';
+                btn.style.background = '';
+            }
+        }
+        
+        function randomizeAll() {
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(slider => {
+                const min = parseInt(slider.min);
+                const max = parseInt(slider.max);
+                const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
+                slider.value = randomValue;
+                slider.dispatchEvent(new Event('input'));
+            });
+        }
+        
+        function resetAll() {
+            document.getElementById('feedbackIntensity').value = 25;
+            document.getElementById('feedbackDelay').value = 5;
+            document.getElementById('rgbShift').value = 5;
+            document.getElementById('colorNoise').value = 20;
+            document.getElementById('bleach').value = 25;
+            document.getElementById('pixelSort').value = 0;
+            document.getElementById('scanLines').value = 30;
+            document.getElementById('dataMosh').value = 0;
+            document.getElementById('chromaIntensity').value = 0;
+            document.getElementById('chromaTolerance').value = 30;
+            document.getElementById('chromaColor').value = 'green';
+            document.getElementById('vhsTracking').value = 0;
+            document.getElementById('vhsWave').value = 0;
+            document.getElementById('audioSensitivity').value = 0;
+            document.getElementById('timeEcho').value = 0;
+            
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(slider => slider.dispatchEvent(new Event('input')));
+            
+            params.chromaColor = 'green';
+        }
+        
+        function saveFrame() {
+            const link = document.createElement('a');
+            link.download = `glitch_frame_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function toggleVideoRecording() {
+            const btn = document.getElementById('videoBtn');
+            
+            if (!isRecordingVideo) {
+                startVideoRecording(btn);
+            } else {
+                stopVideoRecording(btn);
+            }
+        }
+        
+        function startVideoRecording(btn) {
+            try {
+                const canvasStream = canvas.captureStream(30);
+                
+                const options = {
+                    mimeType: 'video/mp4',
+                    videoBitsPerSecond: 15000000 // Increased to 15 Mbps for maximum quality
+                };
+                
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp9';
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options.mimeType = 'video/webm';
+                    }
+                }
+                
+                mediaRecorder = new MediaRecorder(canvasStream, options);
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+                    const url = URL.createObjectURL(blob);
+                    
+                    let extension = '.mp4';
+                    if (mediaRecorder.mimeType.includes('webm')) {
+                        extension = '.webm';
+                    }
+                    
+                    const link = document.createElement('a');
+                    link.download = `glitch_video_${Date.now()}${extension}`;
+                    link.href = url;
+                    link.click();
+                    
+                    URL.revokeObjectURL(url);
+                    recordedChunks = [];
+                    console.log('Video saved successfully!');
+                };
+                
+                mediaRecorder.start(100);
+                isRecordingVideo = true;
+                recordingStartTime = Date.now();
+                
+                btn.textContent = 'STOP VIDEO REC';
+                btn.style.background = 'linear-gradient(145deg, #664d00, #443300)';
+                
+                console.log('Started video recording...');
+                
+                updateRecordingButton(btn);
+                
+            } catch (error) {
+                console.error('Error starting video recording:', error);
+                alert('Error starting video recording: ' + error.message);
+            }
+        }
+        
+        function stopVideoRecording(btn) {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            isRecordingVideo = false;
+            btn.textContent = 'START VIDEO REC';
+            btn.style.background = '';
+            
+            console.log('Video recording stopped');
+        }
+        
+        function checkVideoRecordingDuration() {
+            if (!isRecordingVideo) return;
+            
+            const elapsed = Date.now() - recordingStartTime;
+            
+            if (elapsed >= VIDEO_DURATION) {
+                const btn = document.getElementById('videoBtn');
+                stopVideoRecording(btn);
+            }
+        }
+        
+        function updateRecordingButton(btn) {
+            if (!isRecordingVideo) return;
+            
+            const elapsed = Date.now() - recordingStartTime;
+            const remaining = Math.max(0, VIDEO_DURATION - elapsed);
+            const seconds = Math.ceil(remaining / 1000);
+            
+            if (remaining > 0) {
+                btn.textContent = `RECORDING ${seconds}s`;
+                setTimeout(() => updateRecordingButton(btn), 100);
+            }
+        }
+        
+        function toggleHelp() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.toggle('show');
+        }
+        
+        // Close help modal when clicking outside
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+        
+        // Close help modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('helpModal').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
